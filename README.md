@@ -1,22 +1,51 @@
 # ELH Terminal
 
-**Live demo → [elhterminal.com](https://elhterminal.com)**
+**Quantitative Portfolio Management System**
 
-A full-stack quantitative trading terminal built as a BSc Computer Science dissertation at Nottingham Trent University. Bridges real-time crypto and equity markets with macroeconomic intelligence, strategy backtesting, and AI-assisted portfolio analysis.
+A full-stack financial analytics platform bridging real-time crypto and equity markets with macroeconomic intelligence, strategy backtesting, and AI-assisted portfolio analysis. Built as a final-year BSc dissertation project at Nottingham Trent University (2025–26).
+
+![Backend](https://img.shields.io/badge/Backend-FastAPI%20%2F%20Python%203.11-009688?style=flat-square)
+![Frontend](https://img.shields.io/badge/Frontend-React%2019%20%2F%20TypeScript-3178C6?style=flat-square)
+![Database](https://img.shields.io/badge/Database-PostgreSQL-336791?style=flat-square)
+![AI](https://img.shields.io/badge/AI-Gemini%202.5%20Flash-4285F4?style=flat-square)
+![Live](https://img.shields.io/badge/Live-elhterminal.com-22c55e?style=flat-square)
 
 ---
 
-## Tech Stack
+## Live Demo
 
-| Layer | Technology |
+**[elhterminal.com](https://elhterminal.com)**
+
+---
+
+## Overview
+
+ELH Terminal provides a unified interface for portfolio tracking, real-time market data, quantitative strategy backtesting, and macroeconomic regime analysis — all in one authenticated web application.
+
+> Screenshots and demo video coming soon.
+
+---
+
+## Architecture
+
+| Layer | Stack |
 |---|---|
-| Backend | Python 3.11, FastAPI, PostgreSQL |
-| Frontend | React 19, TypeScript, Vite, Tailwind CSS |
-| Real-time | Binance WebSocket (direct), Finnhub WebSocket (proxied) |
-| Quant engine | NumPy, Pandas, custom block-based pipeline |
-| AI | Google Gemini 2.5 Flash |
-| Auth | JWT (HttpOnly cookie) + CSRF double-submit pattern |
-| Hosting | Render (backend), Vercel (frontend) |
+| Backend | Python 3.11, FastAPI, Uvicorn, PostgreSQL, Pandas, NumPy |
+| Frontend | React 19, TypeScript, Vite, Tailwind CSS, Recharts, Lightweight Charts |
+| Auth | JWT (HttpOnly cookie) + CSRF double-submit cookie |
+| AI | Google Gemini 2.5 Flash (proxied server-side) |
+| Hosting | Render (backend) + Vercel (frontend) |
+
+### Data Sources
+
+| Source | Data |
+|---|---|
+| Binance REST + WS | Live crypto prices, funding rate, open interest |
+| Finnhub | Equity quotes, candles, WebSocket proxy |
+| FRED (St. Louis Fed) | GDP, CPI, unemployment, interest rates, yield curve |
+| CoinGecko | Market cap, BTC/ETH dominance, stablecoin supply |
+| Alternative.me | Fear & Greed Index |
+| Yahoo Finance | Indices (SPX, NDX), commodities, ETFs |
 
 ---
 
@@ -26,9 +55,10 @@ A full-stack quantitative trading terminal built as a BSc Computer Science disse
 - Real-time crypto prices via Binance WebSocket (BTC, ETH, SOL, BNB, XRP and more)
 - Real-time equity and index quotes via Finnhub WebSocket
 - Candlestick charts powered by TradingView Lightweight Charts v5
+- Quant metric strip: Beta, Volatility, Funding Rate, Stablecoin Peg, Drawdown
 
 ### Strategy Backtester
-Simulates long-only strategies on historical OHLCV data with equity curve, trade log, Sharpe ratio, max drawdown, and win rate. Supports:
+Simulates long-only strategies on historical OHLCV data. Returns equity curve, trade log, Sharpe ratio, max drawdown, and win rate. Crypto symbols use Binance REST; equities use Yahoo Finance.
 
 | Strategy | Description |
 |---|---|
@@ -41,64 +71,33 @@ Simulates long-only strategies on historical OHLCV data with equity curve, trade
 | MACD Momentum | MACD signal line crossover |
 | ATR Volatility Breakout | Volatility-adjusted breakout |
 
-Crypto symbols fetch from Binance REST (native 4H/1D support). Non-crypto symbols fetch from Yahoo Finance with 1H→4H resampling where needed.
-
 ### Macroeconomic Dashboard
-- Federal Reserve data via FRED API (interest rates, CPI, unemployment, M2, yield curve)
-- Custom macro scoring algorithm combining indicators into a regime signal
-- Crypto macro overlay (dominance, fear & greed, funding rates)
+- Federal Reserve data via FRED API with custom composite scoring
+- Macro regime quadrant: Goldilocks / Stagflation / Overheating / Deflation
+- Crypto macro overlay: composite signal 0–100 across Liquidity, Leverage, On-Chain, Sentiment, Institutional, and Quant categories
+- Live radar chart and per-category breakdowns
 
 ### Portfolio & Transaction Tracking
-- Add, edit, and remove trades with cost-basis and PnL calculation
-- Per-user data isolation with JWT-scoped queries
-- Trade journal linked to transactions
+- Transaction-based accounting with cost-basis and real-time PnL
+- Performance metrics: Sharpe, Sortino, CAGR, VaR, Kelly Criterion, Max Drawdown
+- Per-user data isolation enforced at the database layer
 
 ### AI Analysis
-- Conversational market analysis powered by Google Gemini 2.5 Flash
-- Per-symbol AI report generation with grounding
-- Rate-limited server-side proxy — API key never exposed to the browser
+- Conversational market analysis via Google Gemini 2.5 Flash
+- Per-symbol AI report generation with source grounding
+- Server-side API proxy — key never exposed to the browser
 
 ### Security
-- JWT stored in HttpOnly cookie, never accessible to JavaScript
-- CSRF double-submit cookie pattern on all mutating endpoints
-- Rate limiting on compute-heavy and AI endpoints
+- **JWT** stored in HttpOnly cookie — inaccessible from JavaScript
+- **CSRF** double-submit cookie pattern on all mutating endpoints
+- Rate limiting on compute-heavy and AI endpoints (slowapi)
 - WebSocket concurrent connection cap per IP
 - Input validation: symbol regex, interval/period whitelists, bounded date ranges
 
 ---
 
-## Architecture
-
-```
-Browser
-  │
-  ├── Vercel (React SPA)
-  │     └── JWT cookie + CSRF header on every authenticated request
-  │
-  └── Render (FastAPI)
-        ├── /api/auth         — login, logout, session, password change
-        ├── /api/market       — macro, scoring, news, forecast, backtest
-        ├── /api/finnhub      — equity search, candles, WS proxy
-        ├── /api/ai           — Gemini chat + analysis proxy
-        └── /api/transactions — portfolio CRUD
-              │
-              ├── PostgreSQL   (users, transactions, trade journal)
-              ├── Binance REST/WS   (crypto OHLCV + live prices)
-              ├── Finnhub REST/WS   (equity OHLCV + live prices)
-              ├── FRED REST         (macro indicators)
-              └── Gemini API        (AI analysis)
-```
-
----
-
-## Screenshots
-
-*Screenshots and demo video coming soon.*
-
----
-
 ## Project Context
 
-Built as a final-year dissertation project exploring the intersection of quantitative finance, real-time systems, and applied AI. The system is designed as a prototype SaaS platform demonstrating institutional-style analytics for retail investors.
+Built as a final-year dissertation project exploring the intersection of quantitative finance, real-time distributed systems, and applied AI. The system is designed as a prototype SaaS platform demonstrating institutional-style analytics accessible to retail investors.
 
 The private source repository is available on request for academic or recruitment purposes.
