@@ -1,85 +1,104 @@
+# ELH Terminal
 
-ELH Terminal - Quantitative Portfolio Management System (Preview)
+**Live demo → [elhterminal.com](https://elhterminal.com)**
 
---------------------------------------------------------------------------------
-PROJECT CONTEXT
---------------------------------------------------------------------------------
-This repository serves as a technical preview for a BSc Dissertation project and 
-SaaS startup prototype focused on bridging digital asset markets with traditional 
-macroeconomic indicators. The application is a full-stack financial analytics 
-dashboard designed to provide retail investors with institutional-grade insights.
+A full-stack quantitative trading terminal built as a BSc Computer Science dissertation at Nottingham Trent University. Bridges real-time crypto and equity markets with macroeconomic intelligence, strategy backtesting, and AI-assisted portfolio analysis.
 
-Note: This is a development snapshot intended for code review and portfolio 
-demonstration.
+---
 
---------------------------------------------------------------------------------
-TECHNICAL ARCHITECTURE
---------------------------------------------------------------------------------
+## Tech Stack
 
-1. Backend (Python 3.10+ / FastAPI)
-The server acts as a centralized API Gateway and WebSocket Proxy. It handles:
-- Data Normalization: Unifies disparate data formats from Binance (Crypto), 
-  Finnhub (Equities), and FRED (Macro) into a standardized internal schema.
-- Security: Implements a Split-Proxy pattern where API keys and secrets remain 
-  server-side. The frontend authenticates via JWT (JSON Web Tokens).
-- Quantitative Engine: Uses NumPy and Pandas to calculate rolling volatility, 
-  correlation coefficients, and Z-scores for market regime detection.
+| Layer | Technology |
+|---|---|
+| Backend | Python 3.11, FastAPI, PostgreSQL |
+| Frontend | React 19, TypeScript, Vite, Tailwind CSS |
+| Real-time | Binance WebSocket (direct), Finnhub WebSocket (proxied) |
+| Quant engine | NumPy, Pandas, custom block-based pipeline |
+| AI | Google Gemini 2.5 Flash |
+| Auth | JWT (HttpOnly cookie) + CSRF double-submit pattern |
+| Hosting | Render (backend), Vercel (frontend) |
 
-2. Frontend (React 19 / TypeScript)
-A responsive Single Page Application (SPA) optimized for data density.
-- Visualization: Integrates Lightweight Charts (TradingView) for canvas-based 
-  rendering of financial data.
-- State Management: Uses localized React state for high-frequency updates, 
-  minimizing re-renders during WebSocket stream events.
+---
 
---------------------------------------------------------------------------------
-CORE FEATURES IMPLEMENTED
---------------------------------------------------------------------------------
+## Features
 
-1. Real-Time Market Data
-   - Direct WebSocket integration with Binance for sub-second crypto price updates.
-   - Server-proxied WebSocket tunnel for Finnhub stock data.
+### Live Market Data
+- Real-time crypto prices via Binance WebSocket (BTC, ETH, SOL, BNB, XRP and more)
+- Real-time equity and index quotes via Finnhub WebSocket
+- Candlestick charts powered by TradingView Lightweight Charts v5
 
-2. Macroeconomic Intelligence
-   - Automated ingestion of Federal Reserve Economic Data (GDP, CPI).
-   - Custom "Macro Score" algorithm weighting liquidity and sentiment.
+### Strategy Backtester
+Simulates long-only strategies on historical OHLCV data with equity curve, trade log, Sharpe ratio, max drawdown, and win rate. Supports:
 
-3. Portfolio Analytics
-   - Transaction-based accounting with cost-basis calculation.
-   - Real-time PnL tracking and risk metrics (Sharpe Ratio, Max Drawdown).
+| Strategy | Description |
+|---|---|
+| MA20/50 Crossover | Simple moving average trend following |
+| EMA9/21 Crossover | Fast EMA momentum |
+| EMA20/50 Crossover | Medium-term EMA trend |
+| Bollinger Bands | Mean reversion on band touches |
+| Donchian Channel Breakout | N-period high/low breakout |
+| RSI Mean Reversion | Oversold/overbought reversion |
+| MACD Momentum | MACD signal line crossover |
+| ATR Volatility Breakout | Volatility-adjusted breakout |
 
-4. Predictive Modeling
-   - Linear regression forecasting for price targets.
-   - Seasonality analysis using historical monthly return distributions.
+Crypto symbols fetch from Binance REST (native 4H/1D support). Non-crypto symbols fetch from Yahoo Finance with 1H→4H resampling where needed.
 
-5. AI Assistant
-   - Context-aware chatbot (Google Gemini 2.5) that ingests live portfolio state.
+### Macroeconomic Dashboard
+- Federal Reserve data via FRED API (interest rates, CPI, unemployment, M2, yield curve)
+- Custom macro scoring algorithm combining indicators into a regime signal
+- Crypto macro overlay (dominance, fear & greed, funding rates)
 
---------------------------------------------------------------------------------
-SETUP INSTRUCTIONS
---------------------------------------------------------------------------------
+### Portfolio & Transaction Tracking
+- Add, edit, and remove trades with cost-basis and PnL calculation
+- Per-user data isolation with JWT-scoped queries
+- Trade journal linked to transactions
 
-Prerequisites:
-- Node.js v18+
-- Python 3.10+
+### AI Analysis
+- Conversational market analysis powered by Google Gemini 2.5 Flash
+- Per-symbol AI report generation with grounding
+- Rate-limited server-side proxy — API key never exposed to the browser
 
-Backend:
-1. cd backend
-2. python -m venv venv
-3. source venv/bin/activate
-4. pip install -r requirements.txt
-5. uvicorn main:app --reload
+### Security
+- JWT stored in HttpOnly cookie, never accessible to JavaScript
+- CSRF double-submit cookie pattern on all mutating endpoints
+- Rate limiting on compute-heavy and AI endpoints
+- WebSocket concurrent connection cap per IP
+- Input validation: symbol regex, interval/period whitelists, bounded date ranges
 
-Frontend:
-1. cd frontend
-2. npm install
-3. npm run dev
+---
 
---------------------------------------------------------------------------------
-DEVELOPMENT STATUS
---------------------------------------------------------------------------------
-[x] WebSocket stability and reconnection logic.
-[x] Basic quantitative risk modeling.
-[ ] Advanced on-chain analysis.
-[ ] Electron wrapper packaging.
+## Architecture
 
+```
+Browser
+  │
+  ├── Vercel (React SPA)
+  │     └── JWT cookie + CSRF header on every authenticated request
+  │
+  └── Render (FastAPI)
+        ├── /api/auth         — login, logout, session, password change
+        ├── /api/market       — macro, scoring, news, forecast, backtest
+        ├── /api/finnhub      — equity search, candles, WS proxy
+        ├── /api/ai           — Gemini chat + analysis proxy
+        └── /api/transactions — portfolio CRUD
+              │
+              ├── PostgreSQL   (users, transactions, trade journal)
+              ├── Binance REST/WS   (crypto OHLCV + live prices)
+              ├── Finnhub REST/WS   (equity OHLCV + live prices)
+              ├── FRED REST         (macro indicators)
+              └── Gemini API        (AI analysis)
+```
+
+---
+
+## Screenshots
+
+*Screenshots and demo video coming soon.*
+
+---
+
+## Project Context
+
+Built as a final-year dissertation project exploring the intersection of quantitative finance, real-time systems, and applied AI. The system is designed as a prototype SaaS platform demonstrating institutional-style analytics for retail investors.
+
+The private source repository is available on request for academic or recruitment purposes.
