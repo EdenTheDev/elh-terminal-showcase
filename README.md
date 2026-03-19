@@ -96,6 +96,32 @@ Simulates long-only strategies on historical OHLCV data. Returns equity curve, t
 
 ---
 
+## Roadmap
+
+Planned extensions to the quant engine and trade analytics layer, prioritised by analytical value.
+
+### Advanced Trade Analytics Engine
+
+| Feature | Description |
+|---|---|
+| **R-Multiple Framework** | Normalise all trade PnL into units of initial risk (R). Expectancy = mean R-multiple across all closed trades — a scale-invariant performance metric independent of position size |
+| **MAE / MFE Tracking** | Record Maximum Adverse Excursion and Maximum Favorable Excursion per trade. Enables entry/exit efficiency scoring and stop placement optimisation |
+| **Profit Factor & Expectancy Dashboard** | Extend the journal UI with 16+ derived tiles: Profit Factor (gross wins / gross losses), Expectancy (E[R]), Win Streak / Loss Streak, Average Hold Time by setup type |
+| **Dynamic Kelly Sizing** | Compute the full Kelly fraction and fractional Kelly variants (½K, ¼K) from the live journaled win rate and W/L ratio — surfaced alongside portfolio risk metrics |
+| **Consistency Score** | Standard deviation of risk per trade (σ of R-size). Low σ indicates disciplined position sizing; high σ flags discretionary drift |
+| **Trade Screenshot Association** | Attach chart images to journal entries for pattern review and post-hoc analysis |
+
+### Signal & Execution Research
+
+| Feature | Description |
+|---|---|
+| **Macro Regime Filter** | Gate strategy entries by the composite macro signal (0–100). Backtester receives an optional `regime_filter` parameter; trades are only taken when the macro environment matches a target regime band |
+| **Order Flow Module** | Volume delta, cumulative delta, and vector candles using Binance aggTrades endpoint. Tick-level imbalance as a leading signal layer on top of existing OHLCV strategies |
+| **Paper Trading Engine** | Forward-only virtual account that executes live signals in real-time without capital risk. Tracks open positions, unrealised PnL, and daily NAV against a benchmark |
+| **Alert System** | Configurable threshold alerts for price moves, macro score changes, and strategy signal triggers — delivered via browser notification or email |
+
+---
+
 ## Project Context
 
 Built as a final-year dissertation project exploring the intersection of quantitative finance, real-time distributed systems, and applied AI. The system is designed as a prototype SaaS platform demonstrating institutional-style analytics accessible to retail investors.
