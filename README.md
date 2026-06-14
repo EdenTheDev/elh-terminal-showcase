@@ -1,176 +1,52 @@
 # ELH Terminal
 
-**Quantitative Portfolio Management System**
+A multi-asset trading terminal I've been building. It's live at **[elhterminal.com](https://elhterminal.com)**.
 
-A full-stack financial analytics platform combining real-time crypto and equity markets with macroeconomic intelligence, strategy backtesting, PDF research reports, and AI-assisted analysis. Built as a final-year BSc dissertation project at Nottingham Trent University (2025-26).
+Most retail traders end up with five tabs open: TradingView for charts, a couple of sites for derivatives and liquidations, something for wallets, and a separate app for journalling. ELH Terminal is my attempt to put that lot behind one login — live markets, derivatives data, backtesting, an on-chain wallet tracker, a perps journal and an AI research desk.
+
+It started as my final-year computer science dissertation at Nottingham Trent University (submitted 2026), and I've kept building it into a real product since.
 
 ![Backend](https://img.shields.io/badge/Backend-FastAPI%20%2F%20Python%203.11-009688?style=flat-square)
 ![Frontend](https://img.shields.io/badge/Frontend-React%2019%20%2F%20TypeScript-3178C6?style=flat-square)
-![Database](https://img.shields.io/badge/Database-PostgreSQL-336791?style=flat-square)
+![Database](https://img.shields.io/badge/Database-PostgreSQL%20(Neon)-336791?style=flat-square)
 ![AI](https://img.shields.io/badge/AI-Gemini%202.5%20Flash-4285F4?style=flat-square)
 ![Live](https://img.shields.io/badge/Live-elhterminal.com-22c55e?style=flat-square)
 
----
+> The source repo is private. Happy to give recruiters a walkthrough or a live demo on request.
 
-## Live Demo
+## What it does
 
-**[elhterminal.com](https://elhterminal.com)**
+**Markets.** Live crypto over Binance websockets and equities/indices over Finnhub, drawn on Lightweight Charts. On top of that sits the derivatives layer most retail tools paywall: funding and open interest, a Coinglass-style liquidation heatmap, a Bookmap-style depth heatmap, on-chart order-flow footprint with stacked imbalances and sweeps, a gamma-exposure panel, and a derivatives screener.
 
----
+**Strategy Lab.** A block-based backtester. Around 28 strategies, from plain MA/EMA crossovers up to ICT setups (fair-value gaps, order blocks, market-structure shifts, silver bullet). Each strategy is just an entry trigger; exits, bias filters and session filters are separate layers you compose on top, so you can mix and match without rewriting anything. Walk-forward validation, MAE/MFE, the usual risk metrics, and a Pine-to-Python transpiler that runs a TradingView script in a sandbox.
 
-## Overview
+**Perps journal.** For leveraged trading. Log trades by hand, import a CSV, or pull them straight from Hyperliquid. It enriches each one with MAE/MFE against the klines and gives you roughly 20 stats — expectancy, profit factor, R-multiples, Kelly, risk of ruin, streaks — plus an hour-of-day heatmap and a one-line "biggest leak / strongest edge" read.
 
-ELH Terminal provides a unified interface for portfolio tracking, real-time market data, quantitative strategy backtesting, macroeconomic regime analysis, and daily research reports — all behind a JWT-authenticated session with CSRF protection and 2FA.
+**Wallet tracker.** A Hyperliquid leaderboard with smart-money flow, a follow list, and alerts when a wallet you follow changes position (Discord, Telegram or email).
 
----
+**Research desk.** Two market briefs a weekday, generated off a TradingView node, rendered to PDF, and graded against price after the fact so the track record is auditable rather than just claimed.
 
-## Architecture
+**Connections.** Read-only API links to Binance, Hyperliquid and Trading 212 that fill in your portfolio and journal automatically, so you're not retyping trades.
 
-| Layer | Stack |
+**Macro.** A Fed-data regime model (FRED) and a crypto composite score for the top-down read.
+
+**AI assistant.** A Gemini chat that knows which screen you're on and can see your portfolio and journal (with balances masked).
+
+There's also a composable multi-pane "Desk" workspace, a beginner/pro mode toggle, a PWA build, and it all works on mobile.
+
+## Stack
+
+| | |
 |---|---|
-| Backend | Python 3.11, FastAPI, Uvicorn, PostgreSQL, Pandas, NumPy |
-| Frontend | React 19, TypeScript, Vite, Tailwind CSS, Recharts, Lightweight Charts |
-| Auth | JWT (HttpOnly cookie) + CSRF double-submit cookie |
-| AI | Google Gemini 2.5 Flash (proxied server-side) |
-| Hosting | Render (backend, Frankfurt) + Vercel (frontend) |
+| Backend | Python 3.11, FastAPI, PostgreSQL (Neon), pandas / NumPy |
+| Frontend | React 19, TypeScript (strict), Vite, Tailwind, Lightweight Charts, Recharts |
+| Auth | JWT in an HttpOnly cookie, CSRF double-submit, TOTP 2FA, email verification |
+| AI | Gemini 2.5 Flash, server-side only |
+| Data | Binance, Finnhub, Hyperliquid, FRED, CoinGecko, Yahoo Finance |
+| Hosting | Render (backend, Frankfurt), Neon (database), Vercel (frontend) |
 
-### Data Sources
-
-| Source | Data |
-|---|---|
-| Binance REST + WS | Live crypto prices, funding rate, open interest |
-| Finnhub | Equity quotes, candles, WebSocket proxy |
-| FRED (St. Louis Fed) | GDP, CPI, unemployment, interest rates, yield curve |
-| CoinGecko | Market cap, BTC/ETH dominance, stablecoin supply |
-| Alternative.me | Fear & Greed Index |
-| Yahoo Finance | Indices (SPX, NDX), commodities, ETFs |
-
----
-
-## Features
-
-### Live Market Data
-- Real-time crypto prices via Binance WebSocket (BTC, ETH, SOL, BNB, XRP and more)
-- Real-time equity and index quotes via Finnhub WebSocket
-- Candlestick charts powered by TradingView Lightweight Charts v5
-- Quant metric strip: Beta, Volatility, Funding Rate, Stablecoin Peg, Drawdown
-- Server latency and region indicator in the status bar
-
-### Strategy Lab (Backtester)
-Simulates long-only strategies on historical OHLCV data. Returns equity curve, drawdown subplot, trade log, and an extended metric set. Crypto symbols use Binance REST; equities use Yahoo Finance with automatic 4h resampling.
-
-12 strategies across 5 families:
-
-| Strategy | Family |
-|---|---|
-| MA 20/50 Crossover | Trend |
-| EMA 9/21 Crossover | Trend |
-| EMA 20/50 Crossover | Trend |
-| MACD Momentum | Momentum |
-| Momentum ROC | Momentum |
-| Bollinger Bands | Mean-reversion |
-| RSI Mean Reversion | Mean-reversion |
-| Z-Score Reversion | Mean-reversion |
-| Donchian Channel Breakout | Breakout |
-| ATR Volatility Breakout | Breakout |
-| Dual Momentum | Adaptive |
-| Volatility Regime | Adaptive |
-
-Extended metrics: Sharpe, Sortino, profit factor, expectancy, R-multiple, MAE/MFE, win/loss streaks. Walk-forward validation with configurable fold count and out-of-sample ratio. Equity and drawdown charts display percentage values. PDF export streams a report directly to the browser.
-
-### Macroeconomic Dashboard
-- Federal Reserve data via FRED API with custom composite scoring
-- Macro regime quadrant: Goldilocks / Stagflation / Overheating / Deflation
-- Sigmoid-based probability model across six indicators
-- Crypto macro overlay: composite signal 0-100 across Liquidity, Leverage, On-Chain, Sentiment, Institutional, and Quant categories
-- Live radar chart and per-category breakdowns
-
-### Research Desk
-Daily market brief reports are generated by a TradingView MCP node, pushed via a signed HMAC ingest endpoint, rendered as PDFs using ReportLab, and stored in Postgres.
-
-- Two-pane layout: report list with risk-tone pills and top-pick symbol, embedded PDF viewer
-- Report types: Morning Report and Pre-NY Report
-- Each report includes macro context, per-symbol analysis pages with radar charts (axis scores: trend, momentum, volatility, liquidity, confluence), conviction-ranked watchlist, and desk commentary
-- Sidebar badge counts reports published since the user last opened the section
-- Background polling every 60 seconds
-
-### Portfolio and Transaction Tracking
-- Transaction-based accounting with cost-basis and real-time PnL
-- Performance metrics: Sharpe, Sortino, CAGR, VaR (95%), CVaR, Kelly Criterion, Max Drawdown
-- Holdings pie chart, PnL breakdown, CSV export
-- Per-user data isolation enforced at the database layer
-
-### AI Analysis
-- Conversational market analysis via Google Gemini 2.5 Flash
-- Per-symbol AI report generation with source grounding
-- Server-side API proxy — key never exposed to the browser
-- Daily token cap and response caching to manage API costs
-
-### Security
-- **JWT** stored in HttpOnly cookie — inaccessible from JavaScript
-- **CSRF** double-submit cookie pattern on all mutating endpoints
-- **HMAC-SHA256** authentication on the machine-to-machine report ingest endpoint
-- Two-factor authentication (TOTP) with QR code provisioning
-- Email verification for new accounts
-- Rate limiting on compute-heavy and AI endpoints (slowapi)
-- Input validation: symbol regex, interval/period whitelists, bounded date ranges
-- Generic login error messages and timing-safe password comparison to prevent user enumeration
+Around 560 backend tests, TypeScript strict throughout, and every third-party key stays server-side — the browser only ever sees shaped responses.
 
 ---
 
-## Roadmap
-
-Planned extensions to the quant engine and analytics layer, prioritised by analytical value.
-
-### Advanced Trade Analytics
-
-| Feature | Description |
-|---|---|
-| **Dynamic Kelly Sizing** | Compute the full Kelly fraction and fractional Kelly variants (0.5K, 0.25K) from the live journaled win rate and W/L ratio |
-| **Consistency Score** | Standard deviation of risk per trade (sigma of R-size). Low sigma indicates disciplined position sizing; high sigma flags discretionary drift |
-| **Trade Screenshot Association** | Attach chart images to journal entries for pattern review and post-hoc analysis |
-
-### Signal and Execution Research
-
-| Feature | Description |
-|---|---|
-| **Macro Regime Filter** | Gate strategy entries by the composite macro signal (0-100). Backtester receives an optional `regime_filter` parameter; trades only execute when the macro environment matches a target regime band |
-| **Order Flow Module** | Volume delta, cumulative delta, and vector candles using Binance aggTrades endpoint. Tick-level imbalance as a leading signal layer on top of existing OHLCV strategies |
-| **Paper Trading Engine** | Forward-only virtual account that executes live signals in real-time. Tracks open positions, unrealised PnL, and daily NAV against a benchmark |
-| **Alert System** | Configurable threshold alerts for price moves, macro score changes, and strategy signal triggers |
-
-### Stochastic Simulation and Probabilistic Analysis
-
-Planned to live in a new `quant_engine/simulation/` module alongside the existing `forecasting/` and `data_pipeline/` directories.
-
-**Core simulation engine**
-
-| Feature | Description |
-|---|---|
-| **GBM Price Path Simulator** | Fit drift and volatility from historical log returns, then generate N paths over a user-defined horizon using Euler-Maruyama discretisation. Returns percentile bands rendered as a fan chart |
-| **Terminal Distribution** | Histogram of simulated prices at horizon T — exposes skewness and tail risk that a single point forecast conceals |
-| **Monte Carlo VaR / CVaR** | Simulate correlated portfolio paths via Cholesky decomposition of the historical return covariance matrix. 5th percentile = 95% VaR; mean below VaR = CVaR (Expected Shortfall) |
-
-**Strategy robustness testing**
-
-| Feature | Description |
-|---|---|
-| **Simulated Path Backtesting** | Run any of the 12 existing strategies across N GBM-simulated paths rather than a single historical path. Returns the distribution of Sharpe, max drawdown, win rate, and total return |
-| **Robustness Distribution UI** | Violin/box plot of metric distributions across paths, surfacing median, IQR, and outliers |
-
-**Extended stochastic models**
-
-| Model | Description |
-|---|---|
-| Student-t shocks | Replace standard normal noise with Student-t (v approx 4 for crypto) to capture fat tails and excess kurtosis |
-| Ornstein-Uhlenbeck | Mean-reverting process appropriate for spreads, funding rates, and macro indicators. Foundation for a pairs trading module |
-| GARCH(1,1) | Time-varying volatility fitted from historical returns. Captures volatility clustering absent from constant-sigma GBM |
-| Heston Stochastic Volatility | Volatility follows its own CIR mean-reverting process, producing an implied volatility smile |
-
----
-
-## Project Context
-
-Built as a final-year dissertation project exploring the intersection of quantitative finance, real-time distributed systems, and applied AI. The system is designed as a prototype platform demonstrating institutional-style analytics accessible to retail traders.
-
-The private source repository is available on request for academic or recruitment purposes.
+Built by Eden Hendry. Live at [elhterminal.com](https://elhterminal.com).
