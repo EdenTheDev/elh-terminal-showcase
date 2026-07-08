@@ -8,7 +8,7 @@ It started as my final-year computer science dissertation at Nottingham Trent Un
 
 ![Backend](https://img.shields.io/badge/Backend-FastAPI%20%2F%20Python%203.11-009688?style=flat-square)
 ![Frontend](https://img.shields.io/badge/Frontend-React%2019%20%2F%20TypeScript-3178C6?style=flat-square)
-![Database](https://img.shields.io/badge/Database-PostgreSQL%20(Neon)-336791?style=flat-square)
+![Database](https://img.shields.io/badge/Database-PostgreSQL%2017-336791?style=flat-square)
 ![AI](https://img.shields.io/badge/AI-Gemini%202.5%20Flash-4285F4?style=flat-square)
 ![Tests](https://img.shields.io/badge/Tests-1%2C000%2B%20backend-success?style=flat-square)
 ![Live](https://img.shields.io/badge/Live-elhterminal.com-22c55e?style=flat-square)
@@ -54,11 +54,11 @@ Plus a beginner/pro mode toggle, privacy masking across every panel that shows m
 
 | Layer | Stack |
 |---|---|
-| Backend | Python 3.11, FastAPI, Uvicorn, Pydantic v2, PostgreSQL (Neon), pandas, NumPy |
+| Backend | Python 3.11, FastAPI, Uvicorn, Pydantic v2, PostgreSQL 17 (self-hosted, Docker), pandas, NumPy |
 | Frontend | React 19, TypeScript (strict), Vite, Tailwind, Lightweight Charts, Recharts |
 | Real-time | Binance WS (direct), Finnhub WS (proxied), Hyperliquid WS (wallet harvester) |
 | AI | Gemini 2.5 Flash, server-side with daily caps and a response cache |
-| Hosting | Render (backend, Frankfurt), Neon (database, EU), Vercel (frontend) |
+| Hosting | Self-hosted Linux VPS (FastAPI + Postgres in Docker Compose, behind Caddy + Cloudflare), Vercel (frontend) |
 
 A few things hold across the codebase:
 
